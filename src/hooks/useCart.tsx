@@ -28,74 +28,51 @@ interface CartContextData {
 const CartContext = createContext<CartContextData>({} as CartContextData);
 
 export function CartProvider({ children }: CartProviderProps): JSX.Element {
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchProducts() {
-      try {
-        const response = await api.get("http://localhost:3333/products", {});
-        const allProducts = response.data;
-        localStorage.setItem("@RocketShoes:cart", JSON.stringify(allProducts));
-        setCart(allProducts);
-      } catch (error) {
-        console.log(error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchProducts();
-  }, []);
-
-  useEffect(() => {
-    async function fetchStock() {
-      try {
-        const response = await api.get("http://localhost:3333/stock", {});
-        const allStock = response.data;
-        localStorage.setItem("@RocketShoes:stock", JSON.stringify(allStock));
-        setCart(allStock);
-      } catch (error) {
-        console.log(error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchStock();
-  }, []);
-
+  
   const [cart, setCart] = useState<Product[]>(() => {
-    const storagedCart = localStorage.getItem("@RocketShoes:cart");
-    const storagedStock = localStorage.getItem("@RocketShoes:stock");
+    const storagedCart = localStorage.getItem('@RocketShoes:cart');
 
-    if (storagedCart && storagedStock) {
-      try {
-        JSON.parse(storagedCart);
-        JSON.parse(storagedStock);
-      } catch (error) {
-        console.log(error);
-      }
+    if(storagedCart) {
+      return JSON.parse(storagedCart);
     }
+    
     return [];
   });
 
-  // useEffect(() => {
-  //   api.get('http://localhost:3333/stock', {
-  //   })
-  //   .then(function (response) {
-  //     const allStock = response.data;
-  //     localStorage.setItem('@RocketShoes:stock', JSON.stringify(allStock))
-  //   })
-  //   .catch(function (error) {
-  //     console.log(error);
-  //   });
-  // })
-
   const addProduct = async (productId: number) => {
     try {
-      // TODO
+      const UpdatedCart = [...cart];
+      console.log(UpdatedCart);
+      
+      const productExists = UpdatedCart.find(product => product.id === productId);
+
+      const stock = await api.get(`/stock/${productId}`);
+
+      const stockAmount = stock.data.amount;
+      const currentAmout = productExists ? productExists.amount : 0;
+      const amount = currentAmout + 1;
+
+      if (amount > stockAmount) {
+        console.log('Quantidade solicitada fora de estoque');
+        return;
+      }
+
+      if(productExists) {
+        productExists.amount = amount;
+      } else {
+        const product = await api.get(`/products/${productId}`);
+
+        const newProduct = {
+          ...product.data,
+          amount: 1
+        }
+        UpdatedCart.push(newProduct);
+      }
+
+      setCart(UpdatedCart);
+      localStorage.setItem('@RocketShoes:cart', JSON.stringify(UpdatedCart));
     } catch {
-      // TODO
+      console.log('Erro na adição do produto');
     }
   };
 
