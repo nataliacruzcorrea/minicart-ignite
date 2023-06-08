@@ -8,6 +8,7 @@ import {
 import { api } from "../services/api";
 import { Product, Stock } from "../types";
 import { stringify } from "querystring";
+import { toast } from "react-toastify";
 
 interface CartProviderProps {
   children: ReactNode;
@@ -41,7 +42,6 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
   const addProduct = async (productId: number) => {
     try {
       const UpdatedCart = [...cart];
-      console.log(UpdatedCart);
 
       const productExists = UpdatedCart.find(
         (product) => product.id === productId
@@ -54,7 +54,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       const amount = currentAmout + 1;
 
       if (amount > stockAmount) {
-        console.log("Quantidade solicitada fora de estoque");
+        toast.error("Quantidade solicitada fora de estoque");
         return;
       }
 
@@ -73,7 +73,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       setCart(UpdatedCart);
       localStorage.setItem("@RocketShoes:cart", JSON.stringify(UpdatedCart));
     } catch {
-      console.log("Erro na adição do produto");
+      toast.error("Erro na adição do produto");
     }
   };
 
@@ -92,7 +92,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
         throw Error("");
       }
     } catch {
-      console.log("Erro na remoção do produto");
+      toast.error("Erro na remoção do produto");
     }
   };
 
@@ -110,7 +110,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       const stockAmount = stock.data.amount;
 
       if (amount > stockAmount) {
-        console.log("Quantidade solicitada fora de estoque");
+        toast.error("Quantidade solicitada fora de estoque");
         return;
       }
 
@@ -127,7 +127,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
         throw Error();
       }
     } catch {
-      console.log("Erro na alteração de quantidade de produtos");
+      toast.error("Erro na alteração de quantidade de produtos");
     }
   };
 
